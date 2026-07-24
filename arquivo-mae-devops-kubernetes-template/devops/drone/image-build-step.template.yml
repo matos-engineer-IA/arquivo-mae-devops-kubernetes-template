@@ -1,0 +1,26 @@
+# BLOCO OPCIONAL: adapte e insira na pipeline CI somente após revisão.
+# O plugin Docker usa Docker-in-Docker e pode exigir execução privilegiada/trusted.
+# Não habilite essa opção por padrão em um runner Kubernetes.
+
+- name: publicar-imagem
+  image: plugins/docker:{{VERSAO_FIXADA}}
+  settings:
+    registry: "{{REGISTRY_HOST}}"
+    repo: "{{REGISTRY_REPOSITORY}}"
+    dockerfile: Dockerfile
+    tags:
+      - ${DRONE_COMMIT_SHA}
+    username:
+      from_secret: "{{REGISTRY_USERNAME_SECRET}}"
+    password:
+      from_secret: "{{REGISTRY_PASSWORD_SECRET}}"
+  when:
+    event:
+      - push
+      - tag
+    branch:
+      - "{{BRANCH_PRINCIPAL}}"
+
+# Alternativa recomendada quando modo privilegiado não é aceito:
+# use o builder rootless/aprovado pela organização e registre aqui a imagem,
+# os comandos, o cache, o registry e a política de assinatura.

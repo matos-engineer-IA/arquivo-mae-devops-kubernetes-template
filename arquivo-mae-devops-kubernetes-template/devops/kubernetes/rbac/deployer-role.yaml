@@ -1,0 +1,22 @@
+# TEMPLATE DE PLATAFORMA: substitua o namespace e revise os recursos permitidos.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-template-deployer
+  namespace: "{{KUBE_NAMESPACE}}"
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "services", "serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]

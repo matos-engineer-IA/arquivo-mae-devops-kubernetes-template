@@ -1,0 +1,15 @@
+sequenceDiagram
+    actor Usuario
+    participant Interface
+    participant Aplicacao
+    participant Banco
+    participant Externo
+
+    Usuario->>Interface: Inicia ação
+    Interface->>Aplicacao: Envia solicitação
+    Aplicacao->>Aplicacao: Valida entrada
+    Aplicacao->>Banco: Consulta ou persiste
+    Aplicacao->>Externo: Integra, quando necessário
+    Externo-->>Aplicacao: Retorna resultado
+    Aplicacao-->>Interface: Retorna resposta
+    Interface-->>Usuario: Exibe resultado

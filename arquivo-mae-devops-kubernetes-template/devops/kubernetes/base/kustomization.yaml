@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - serviceaccount.yaml
+  - deployment.yaml
+  - service.yaml
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - APP_ENV=base
+      - LOG_LEVEL=info
+
+generatorOptions:
+  disableNameSuffixHash: false
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize

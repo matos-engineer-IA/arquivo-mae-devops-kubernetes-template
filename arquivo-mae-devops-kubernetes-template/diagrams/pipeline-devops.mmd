@@ -1,0 +1,16 @@
+flowchart LR
+  A[Pessoa ou agente de IA] --> B[Git branch e PR]
+  B --> C[Webhook]
+  C --> D[Drone Server]
+  D --> E[Runner Kubernetes]
+  E --> F[Pods efêmeros: lint, testes e segurança]
+  F --> G[Build e registry]
+  G --> H{Promoção aprovada?}
+  H -- Não --> I[Interromper e registrar]
+  H -- Sim --> J[Render + dry-run + diff]
+  J --> K[kubectl apply]
+  K --> L[Cluster Kubernetes gerenciado pelo Rancher]
+  L --> M[Rollout e smoke test]
+  M --> N[Logs, métricas e evidências]
+  M --> O{Falha?}
+  O -- Sim --> P[Diagnóstico e rollback aprovado]

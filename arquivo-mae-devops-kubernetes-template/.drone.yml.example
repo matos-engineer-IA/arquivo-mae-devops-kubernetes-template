@@ -1,0 +1,164 @@
+# TEMPLATE: copie para .drone.yml somente depois de preencher e revisar todos os {{PLACEHOLDERS}}.
+# O tipo kubernetes requer Drone self-hosted e runner Kubernetes configurado.
+# Nunca coloque tokens, kubeconfigs ou senhas neste arquivo.
+# A CLI local do Drone não executa nem valida integralmente pipelines Kubernetes.
+
+---
+kind: pipeline
+type: kubernetes
+name: ci
+
+concurrency:
+  limit: 1
+
+steps:
+  - name: validar-documentacao-base
+    image: "{{PYTHON_IMAGE_FIXADA_POR_DIGEST_OU_VERSAO}}"
+    commands:
+      - python3 scripts/verificar_base.py
+
+  - name: qualidade
+    image: "{{CI_IMAGE_FIXADA_POR_DIGEST_OU_VERSAO}}"
+    commands:
+      - "{{COMANDO_DE_INSTALACAO_REPRODUZIVEL}}"
+      - "{{COMANDO_DE_LINT}}"
+      - "{{COMANDO_DE_TIPOS}}"
+      - "{{COMANDO_DE_TESTES}}"
+      - "{{COMANDO_DE_BUILD}}"
+
+  - name: validar-manifests
+    image: "{{KUBECTL_IMAGE_FIXADA_POR_DIGEST_OU_VERSAO}}"
+    environment:
+      DEPLOY_ENV: development
+      IMAGE: validation.local/app-template:${DRONE_COMMIT_SHA}
+      K8S_OVERLAY: devops/kubernetes/overlays/development
+      K8S_IMAGE_PLACEHOLDER: registry.example.invalid/team/app-template:replace-me
+    commands:
+      - sh -n scripts/devops/*.sh
+      - sh scripts/devops/k8s_validate.sh
+
+  - name: seguranca
+    image: "{{SECURITY_IMAGE_FIXADA_POR_DIGEST_OU_VERSAO}}"
+    commands:
+      - "{{COMANDO_SCAN_DE_SEGREDOS}}"
+      - "{{COMANDO_SAST_SCA_OU_POLITICA_APROVADA}}"
+
+  # A construção/publicação depende do registry e da ferramenta aprovados.
+  # Adapte devops/drone/image-build-step.template.yml e inclua aqui.
+  # Não habilite Docker-in-Docker privilegiado sem revisão de segurança.
+  # Publique somente em eventos/branches autorizados, com tag ${DRONE_COMMIT_SHA}.
+
+trigger:
+  event:
+    - push
+    - pull_request
+    - tag
+
+---
+kind: pipeline
+type: kubernetes
+name: deploy-development
+
+concurrency:
+  limit: 1
+
+steps:
+  - name: deploy
+    image: "{{KUBECTL_IMAGE_FIXADA_POR_DIGEST_OU_VERSAO}}"
+    environment:
+      KUBE_CONFIG_B64:
+        from_secret: kubeconfig_development_b64
+      KUBE_CONTEXT: "{{KUBE_CONTEXT_DEVELOPMENT}}"
+      EXPECTED_KUBE_CONTEXT: "{{KUBE_CONTEXT_DEVELOPMENT}}"
+      EXPECTED_KUBE_SERVER: "{{KUBE_SERVER_DEVELOPMENT}}"
+      KUBE_NAMESPACE: "{{KUBE_NAMESPACE_DEVELOPMENT}}"
+      EXPECTED_KUBE_NAMESPACE: "{{KUBE_NAMESPACE_DEVELOPMENT}}"
+      K8S_OVERLAY: devops/kubernetes/overlays/development
+      K8S_DEPLOYMENT: app-template
+      K8S_IMAGE_PLACEHOLDER: registry.example.invalid/team/app-template:replace-me
+      IMAGE: "{{REGISTRY_REPOSITORY}}:${DRONE_COMMIT_SHA}"
+      ALLOW_CLUSTER_WRITE: "1"
+      ROLLOUT_TIMEOUT: 180s
+    commands:
+      - test "$DRONE_BUILD_EVENT" = "promote"
+      - test "$DRONE_DEPLOY_TO" = "development"
+      - sh scripts/devops/k8s_deploy.sh development
+
+trigger:
+  event:
+    - promote
+  target:
+    - development
+
+---
+kind: pipeline
+type: kubernetes
+name: deploy-staging
+
+concurrency:
+  limit: 1
+
+steps:
+  - name: deploy
+    image: "{{KUBECTL_IMAGE_FIXADA_POR_DIGEST_OU_VERSAO}}"
+    environment:
+      KUBE_CONFIG_B64:
+        from_secret: kubeconfig_staging_b64
+      KUBE_CONTEXT: "{{KUBE_CONTEXT_STAGING}}"
+      EXPECTED_KUBE_CONTEXT: "{{KUBE_CONTEXT_STAGING}}"
+      EXPECTED_KUBE_SERVER: "{{KUBE_SERVER_STAGING}}"
+      KUBE_NAMESPACE: "{{KUBE_NAMESPACE_STAGING}}"
+      EXPECTED_KUBE_NAMESPACE: "{{KUBE_NAMESPACE_STAGING}}"
+      K8S_OVERLAY: devops/kubernetes/overlays/staging
+      K8S_DEPLOYMENT: app-template
+      K8S_IMAGE_PLACEHOLDER: registry.example.invalid/team/app-template:replace-me
+      IMAGE: "{{REGISTRY_REPOSITORY}}:${DRONE_COMMIT_SHA}"
+      ALLOW_CLUSTER_WRITE: "1"
+      ROLLOUT_TIMEOUT: 300s
+    commands:
+      - test "$DRONE_BUILD_EVENT" = "promote"
+      - test "$DRONE_DEPLOY_TO" = "staging"
+      - sh scripts/devops/k8s_deploy.sh staging
+
+trigger:
+  event:
+    - promote
+  target:
+    - staging
+
+---
+kind: pipeline
+type: kubernetes
+name: deploy-production
+
+concurrency:
+  limit: 1
+
+steps:
+  - name: deploy
+    image: "{{KUBECTL_IMAGE_FIXADA_POR_DIGEST_OU_VERSAO}}"
+    environment:
+      KUBE_CONFIG_B64:
+        from_secret: kubeconfig_production_b64
+      KUBE_CONTEXT: "{{KUBE_CONTEXT_PRODUCTION}}"
+      EXPECTED_KUBE_CONTEXT: "{{KUBE_CONTEXT_PRODUCTION}}"
+      EXPECTED_KUBE_SERVER: "{{KUBE_SERVER_PRODUCTION}}"
+      KUBE_NAMESPACE: "{{KUBE_NAMESPACE_PRODUCTION}}"
+      EXPECTED_KUBE_NAMESPACE: "{{KUBE_NAMESPACE_PRODUCTION}}"
+      K8S_OVERLAY: devops/kubernetes/overlays/production
+      K8S_DEPLOYMENT: app-template
+      K8S_IMAGE_PLACEHOLDER: registry.example.invalid/team/app-template:replace-me
+      IMAGE: "{{REGISTRY_REPOSITORY}}:${DRONE_COMMIT_SHA}"
+      ALLOW_CLUSTER_WRITE: "1"
+      ROLLOUT_TIMEOUT: 600s
+    commands:
+      # ALLOW_PRODUCTION_DEPLOY e CHANGE_TICKET são injetados como parâmetros da promoção aprovada.
+      - test "$DRONE_BUILD_EVENT" = "promote"
+      - test "$DRONE_DEPLOY_TO" = "production"
+      - sh scripts/devops/k8s_deploy.sh production
+
+trigger:
+  event:
+    - promote
+  target:
+    - production

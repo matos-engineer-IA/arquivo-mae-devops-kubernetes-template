@@ -1,0 +1,12 @@
+kind: policy
+name: default
+metadata:
+  namespace: drone-runner
+resources:
+  request:
+    cpu: 100
+    memory: 128MiB
+  limit:
+    cpu: 1000
+    memory: 1GiB
+service_account: drone-pipeline

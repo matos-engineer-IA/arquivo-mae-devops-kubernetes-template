@@ -1,0 +1,13 @@
+flowchart LR
+    U[Usuário ou sistema de origem]
+    UI[Interface]
+    API[Aplicação ou API]
+    DB[(Banco de dados)]
+    EXT[Serviço externo]
+    OBS[Logs, métricas e alertas]
+
+    U --> UI
+    UI --> API
+    API --> DB
+    API --> EXT
+    API --> OBS

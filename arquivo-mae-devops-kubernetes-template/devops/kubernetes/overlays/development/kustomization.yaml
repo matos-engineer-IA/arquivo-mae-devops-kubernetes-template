@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: app-template-development
+
+resources:
+  - ../../base
+
+configMapGenerator:
+  - name: app-config
+    behavior: merge
+    literals:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+
+patches:
+  - target:
+      kind: Deployment
+      name: app-template
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1

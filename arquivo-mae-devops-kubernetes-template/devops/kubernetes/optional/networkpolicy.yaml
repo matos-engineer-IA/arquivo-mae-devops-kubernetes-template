@@ -1,0 +1,19 @@
+# OPCIONAL: adapte DNS, egress e origens antes de incluir em um kustomization.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-template
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: app-template
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector: {}

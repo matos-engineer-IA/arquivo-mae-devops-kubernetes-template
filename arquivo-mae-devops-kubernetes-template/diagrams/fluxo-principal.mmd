@@ -1,0 +1,13 @@
+flowchart TD
+    A[Receber entrada]
+    B{Entrada válida?}
+    C[Processar regra de negócio]
+    D[Persistir ou integrar]
+    E[Retornar resultado]
+    F[Registrar erro e responder com segurança]
+
+    A --> B
+    B -- Sim --> C
+    C --> D
+    D --> E
+    B -- Não --> F

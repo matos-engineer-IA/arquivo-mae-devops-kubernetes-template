@@ -1,0 +1,74 @@
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+*.env.local
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+config/local.*
+
+# Logs e arquivos temporários
+*.log
+logs/
+tmp/
+temp/
+.cache/
+coverage/
+dist/
+build/
+
+# JavaScript / TypeScript
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+.next/
+.nuxt/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Java / JVM
+target/
+.gradle/
+*.class
+
+# IDE e sistema operacional
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Banco e dumps locais
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.bak
+
+# Kubernetes, Rancher e Drone locais
+.kube/
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+.rancher/
+.ranchcli2.json
+.drone.env
+*.secret.yaml
+*.secrets.yaml
+devops/rendered/
+
+# Artefatos de segurança locais
+*.sbom.json
+*.sarif
+*.scan.json

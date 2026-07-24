@@ -1,0 +1,14 @@
+# TEMPLATE DE PLATAFORMA: associe uma identidade de CI específica do ambiente.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-template-deployer
+  namespace: "{{KUBE_NAMESPACE}}"
+subjects:
+  - kind: ServiceAccount
+    name: "{{CI_SERVICE_ACCOUNT}}"
+    namespace: "{{CI_SERVICE_ACCOUNT_NAMESPACE}}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-template-deployer
